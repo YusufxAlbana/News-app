@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:news_app/utils/app_colors.dart';
 
 class LoadingShimmer extends StatefulWidget {
+  const LoadingShimmer({Key? key}) : super(key: key);
+
   @override
   _LoadingShimmerState createState() => _LoadingShimmerState();
 }

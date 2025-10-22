@@ -21,6 +21,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'News App',
+      debugShowCheckedModeBanner: false,
+      initialRoute: AppPages.INITIAL,
+      getPages: AppPages.routes,
+      initialBinding: AppBindings(),
       theme: ThemeData(
         primarySwatch: Colors.blue,
         primaryColor: AppColors.primary,
@@ -37,10 +41,6 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: AppPages.INITIAL,
-      getPages: AppPages.routes,
-      initialBinding: AppBindings(),
-      debugShowCheckedModeBanner: false,
     );
   }
 }

@@ -41,7 +41,8 @@ dependencies:
   cached_network_image: ^3.4.1
   timeago: ^3.7.1
   flutter_dotenv: ^5.2.1
-
+  flutter_analog_clock: ^1.0.3
+  flutter_staggered_animations: ^1.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
