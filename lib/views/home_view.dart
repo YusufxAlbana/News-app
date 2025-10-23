@@ -10,6 +10,8 @@ import 'package:news_app/widgets/loading_shimmer.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class HomeView extends GetView<NewsController> {
+  const HomeView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +19,7 @@ class HomeView extends GetView<NewsController> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
+        title: const Text(
           'News Today',
           style: TextStyle(
             color: AppColors.textPrimary,
@@ -26,7 +28,7 @@ class HomeView extends GetView<NewsController> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search, color: AppColors.textPrimary),
+            icon: const Icon(Icons.search, color: AppColors.textPrimary),
             onPressed: () => _showSearchDialog(context),
           ),
         ],
@@ -36,8 +38,8 @@ class HomeView extends GetView<NewsController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Judul Halaman
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 'Discover',
                 style: TextStyle(
@@ -47,24 +49,24 @@ class HomeView extends GetView<NewsController> {
                 ),
               ),
             ),
-            SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 'Find the latest news here.',
                 style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Categories
             _buildCategoryList(),
 
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // News List
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 'Top Headlines',
                 style: TextStyle(
@@ -74,17 +76,17 @@ class HomeView extends GetView<NewsController> {
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Expanded(
               child: Obx(() {
                 if (controller.isLoading) {
                   // LoadingShimmer sudah modern, jadi kita tetap pakai
-                  return LoadingShimmer();
+                  return const LoadingShimmer();
                 }
 
                 // Animasi untuk Error dan Empty State
                 return AnimatedSwitcher(
-                  duration: Duration(milliseconds: 500),
+                  duration: const Duration(milliseconds: 500),
                   child: _buildContent(),
                 );
               }),
@@ -111,7 +113,7 @@ class HomeView extends GetView<NewsController> {
       color: AppColors.primary,
       child: AnimationLimiter(
         child: ListView.builder(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: controller.articles.length,
           itemBuilder: (context, index) {
             final article = controller.articles[index];
@@ -144,7 +146,7 @@ class HomeView extends GetView<NewsController> {
       height: 45,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: controller.categories.length,
         itemBuilder: (context, index) {
           final category = controller.categories[index];
@@ -153,8 +155,8 @@ class HomeView extends GetView<NewsController> {
               final isSelected = controller.selectedCategory == category;
               // AnimatedContainer untuk transisi warna dan bentuk yang halus
               return AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                margin: EdgeInsets.only(right: 8),
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : Colors.white,
                   borderRadius: BorderRadius.circular(25),
@@ -167,7 +169,7 @@ class HomeView extends GetView<NewsController> {
                           BoxShadow(
                             color: AppColors.primary.withOpacity(0.3),
                             blurRadius: 5,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           )
                         ]
                       : [],
@@ -176,7 +178,7 @@ class HomeView extends GetView<NewsController> {
                   onTap: () => controller.selectCategory(category),
                   borderRadius: BorderRadius.circular(25),
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: Text(
                       category.capitalize ?? category,
                       style: TextStyle(
@@ -197,15 +199,15 @@ class HomeView extends GetView<NewsController> {
   // Tampilan Error yang lebih baik
   Widget _buildErrorWidget() {
     return Center(
-      key: ValueKey('error'),
+      key: const ValueKey('error'),
       child: Padding(
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.cloud_off_outlined, size: 80, color: Colors.grey[400]),
-            SizedBox(height: 24),
-            Text(
+            const SizedBox(height: 24),
+            const Text(
               'Oops, Something Went Wrong',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -214,21 +216,21 @@ class HomeView extends GetView<NewsController> {
                 color: AppColors.textPrimary,
               ),
             ),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               'Please check your connection and try again.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             ElevatedButton.icon(
-              icon: Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh),
               onPressed: controller.refreshNews,
-              label: Text('Retry'),
+              label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -243,15 +245,15 @@ class HomeView extends GetView<NewsController> {
   // Tampilan Kosong yang lebih baik
   Widget _buildEmptyWidget() {
     return Center(
-      key: ValueKey('empty'),
+      key: const ValueKey('empty'),
       child: Padding(
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.article_outlined, size: 80, color: Colors.grey[400]),
-            SizedBox(height: 24),
-            Text(
+            const SizedBox(height: 24),
+            const Text(
               'No News Found',
               style: TextStyle(
                 fontSize: 20,
@@ -259,8 +261,8 @@ class HomeView extends GetView<NewsController> {
                 color: AppColors.textPrimary,
               ),
             ),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               'We couldn\'t find any articles for this category.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
@@ -281,20 +283,20 @@ class HomeView extends GetView<NewsController> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: Text('Search Bar', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Search Bar', style: TextStyle(fontWeight: FontWeight.bold)),
         content: TextField(
           controller: searchController,
           autofocus: true,
           decoration: InputDecoration(
             hintText: 'Search News...',
-            prefixIcon: Icon(Icons.search, color: Colors.grey),
+            prefixIcon: const Icon(Icons.search, color: Colors.grey),
             filled: true,
             fillColor: Colors.grey[100],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
               borderSide: BorderSide.none,
             ),
-            contentPadding: EdgeInsets.symmetric(vertical: 15),
+            contentPadding: const EdgeInsets.symmetric(vertical: 15),
           ),
           onSubmitted: (value) {
             if (value.isNotEmpty) {
@@ -306,7 +308,7 @@ class HomeView extends GetView<NewsController> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -315,7 +317,7 @@ class HomeView extends GetView<NewsController> {
                 Navigator.of(context).pop();
               }
             },
-            child: Text('Search'),
+            child: const Text('Search'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
