@@ -2,34 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:news_app/controllers/news_controller.dart';
 import 'package:news_app/routes/app_pages.dart';
-import 'package:news_app/utils/app_colors.dart';
 import 'package:news_app/widgets/news_card.dart';
-import 'package:news_app/widgets/category_chip.dart';
 import 'package:news_app/widgets/loading_shimmer.dart';
-// Impor package animasi
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class HomeView extends GetView<NewsController> {
-  const HomeView({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Latar belakang yang lebih modern
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         title: const Text(
           'News Today',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: AppColors.textPrimary),
-            onPressed: () => _showSearchDialog(context),
+            icon: Icon(Get.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () {
+              Get.changeThemeMode(
+                  Get.isDarkMode ? ThemeMode.light : ThemeMode.dark);
+            },
           ),
         ],
       ),
@@ -37,34 +29,32 @@ class HomeView extends GetView<NewsController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Judul Halaman
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Discover',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+            // 🔍 Search bar langsung di bawah AppBar
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) controller.searchNews(value);
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search news...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Find the latest news here.',
-                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-              ),
-            ),
-            const SizedBox(height: 24),
 
-            // Categories
+            // 🗂️ Category list
             _buildCategoryList(),
+            const SizedBox(height: 16),
 
-            const SizedBox(height: 24),
-
-            // News List
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
@@ -72,19 +62,17 @@ class HomeView extends GetView<NewsController> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            // 📰 Main content
             Expanded(
               child: Obx(() {
-                if (controller.isLoading) {
-                  // LoadingShimmer sudah modern, jadi kita tetap pakai
+                if (controller.isLoading && controller.articles.isEmpty) {
                   return const LoadingShimmer();
                 }
-
-                // Animasi untuk Error dan Empty State
                 return AnimatedSwitcher(
                   duration: const Duration(milliseconds: 500),
                   child: _buildContent(),
@@ -97,39 +85,77 @@ class HomeView extends GetView<NewsController> {
     );
   }
 
-  // Widget untuk menampilkan konten utama (berita, error, atau kosong)
+  // 🧠 Build main content
   Widget _buildContent() {
-    if (controller.error.isNotEmpty) {
+    if (controller.error.isNotEmpty && controller.articles.isEmpty) {
       return _buildErrorWidget();
     }
 
-    if (controller.articles.isEmpty) {
+    if (controller.articles.isEmpty && !controller.isLoading) {
       return _buildEmptyWidget();
     }
 
-    // Daftar berita dengan animasi
     return RefreshIndicator(
       onRefresh: controller.refreshNews,
-      color: AppColors.primary,
       child: AnimationLimiter(
         child: ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: controller.articles.length,
+          itemCount: controller.displayedArticles.length + 1,
           itemBuilder: (context, index) {
-            final article = controller.articles[index];
+            if (index == controller.displayedArticles.length) {
+              return Obx(() =>
+                  controller.displayedArticles.length < controller.articles.length
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: Center(
+                            child: ElevatedButton(
+                              onPressed: controller.loadMoreArticles,
+                              child: const Text('Read More'),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink());
+            }
+
+            final article = controller.displayedArticles[index];
+
+            // ✨ Efek animasi tekan (scale halus)
             return AnimationConfiguration.staggeredList(
               position: index,
               duration: const Duration(milliseconds: 375),
               child: SlideAnimation(
-                verticalOffset: 50.0,
+                verticalOffset: 40.0,
                 child: FadeInAnimation(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: NewsCard( // Asumsi NewsCard sudah memiliki desain yang baik
-                      article: article,
-                      onTap: () =>
-                          Get.toNamed(Routes.NEWS_DETAIL, arguments: article),
-                    ),
+                  child: GestureDetector(
+                    onTapDown: (_) =>
+                        controller.selectedArticleIndex.value = index,
+                    onTapUp: (_) {
+                      controller.selectedArticleIndex.value = -1;
+                      Get.toNamed(Routes.NEWS_DETAIL, arguments: article);
+                    },
+                    onTapCancel: () =>
+                        controller.selectedArticleIndex.value = -1,
+                    child: Obx(() {
+                      final isPressed =
+                          controller.selectedArticleIndex.value == index;
+                      return AnimatedScale(
+                        scale: isPressed ? 0.97 : 1.0,
+                        duration: const Duration(milliseconds: 120),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: NewsCard(
+                            article: article,
+                            onTap: () {
+                              controller.selectedArticleIndex.value = index;
+                              Future.delayed(const Duration(milliseconds: 30), () {
+                                controller.selectedArticleIndex.value = -1;
+                                Get.toNamed(Routes.NEWS_DETAIL, arguments: article);
+                              });
+                            },
+                          ),
+                        ),
+                      );
+                    }),
                   ),
                 ),
               ),
@@ -140,10 +166,10 @@ class HomeView extends GetView<NewsController> {
     );
   }
 
-  // Kategori List dengan chip yang lebih modern dan animasi
+  // 🏷️ Category list (tanpa animasi membesar)
   Widget _buildCategoryList() {
-    return Container(
-      height: 45,
+    return SizedBox(
+      height: 40,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -153,37 +179,34 @@ class HomeView extends GetView<NewsController> {
           return Obx(
             () {
               final isSelected = controller.selectedCategory == category;
-              // AnimatedContainer untuk transisi warna dan bentuk yang halus
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
+              return Container(
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.white,
-                  borderRadius: BorderRadius.circular(25),
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected ? AppColors.primary : Colors.grey[300]!,
-                    width: 1.5,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey[300]!,
+                    width: 1.2,
                   ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          )
-                        ]
-                      : [],
                 ),
                 child: InkWell(
                   onTap: () => controller.selectCategory(category),
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(20),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 6),
                     child: Text(
                       category.capitalize ?? category,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: isSelected
+                            ? (Get.isDarkMode ? Colors.black : Colors.white)
+                            : Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -196,7 +219,7 @@ class HomeView extends GetView<NewsController> {
     );
   }
 
-  // Tampilan Error yang lebih baik
+  // ⚠️ Error widget
   Widget _buildErrorWidget() {
     return Center(
       key: const ValueKey('error'),
@@ -210,17 +233,13 @@ class HomeView extends GetView<NewsController> {
             const Text(
               'Oops, Something Went Wrong',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
               'Please check your connection and try again.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+              style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
@@ -228,12 +247,10 @@ class HomeView extends GetView<NewsController> {
               onPressed: controller.refreshNews,
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+                    borderRadius: BorderRadius.circular(30)),
               ),
             ),
           ],
@@ -242,7 +259,7 @@ class HomeView extends GetView<NewsController> {
     );
   }
 
-  // Tampilan Kosong yang lebih baik
+  // 📭 Empty widget
   Widget _buildEmptyWidget() {
     return Center(
       key: const ValueKey('empty'),
@@ -255,78 +272,16 @@ class HomeView extends GetView<NewsController> {
             const SizedBox(height: 24),
             const Text(
               'No News Found',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
               'We couldn\'t find any articles for this category.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+              style: TextStyle(fontSize: 16),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // Dialog pencarian yang lebih modern
-  void _showSearchDialog(BuildContext context) {
-    final TextEditingController searchController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text('Search Bar', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: TextField(
-          controller: searchController,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Search News...',
-            prefixIcon: const Icon(Icons.search, color: Colors.grey),
-            filled: true,
-            fillColor: Colors.grey[100],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(15),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 15),
-          ),
-          onSubmitted: (value) {
-            if (value.isNotEmpty) {
-              controller.searchNews(value);
-              Navigator.of(context).pop();
-            }
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (searchController.text.isNotEmpty) {
-                controller.searchNews(searchController.text);
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Text('Search'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
